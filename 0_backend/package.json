@@ -1,0 +1,46 @@
+{
+  "name": "pubky-sdk-examples",
+  "version": "1.0.0",
+  "description": "Simple examples of using the Pubky SDK",
+  "license": "MIT",
+  "keywords": [
+    "pubky",
+    "pkarr",
+    "sdk",
+    "examples"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "start:prod": "node dist/index.js",
+    "start:dev": "nodemon",
+    "build": "tsc",
+    "clean": "rm -Rf dist/*",
+    "prebuild": "npm run clean",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^0.0.43",
+    "ai": "^3.3.3",
+    "axios": "^1.7.3",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "node-fetch": "^3.3.2",
+    "openai": "^4.55.1",
+    "socket.io": "^4.7.5",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.10",
+    "@types/ws": "^8.5.12",
+    "nodemon": "^3.1.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
+  }
+}
