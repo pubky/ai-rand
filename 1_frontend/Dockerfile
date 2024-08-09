@@ -1,11 +1,11 @@
 FROM node:18-alpine
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
 COPY package.json ./
 COPY package-lock.json ./
 
-# RUN npm ci
+RUN npm ci
 
 COPY . .
 

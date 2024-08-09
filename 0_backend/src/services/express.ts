@@ -28,21 +28,13 @@ const start = async ({ pubkyClient }: { pubkyClient: any }) => {
     io.on("connection", (socket) => {
       console.log("a user connected", socket.id);
       connectedClients[socket.id] = socket;
+      console.log(`Total users connected: ${Object.keys(connectedClients).length}`);
 
       socket.on("disconnect", () => {
         console.log(`User disconnected: ${socket.id}`);
-        delete connectedClients[socket.id]; // Remove o socket da lista ao desconectar
+        delete connectedClients[socket.id];
+        console.log(`Total users connected: ${Object.keys(connectedClients).length}`);
       });
-
-      // socket.on("send-message", (message) => {
-      //   console.log(`Message from ${socket.id}: ${message}`);
-      //   // Responde apenas ao remetente
-      //   socket.emit("message-received", `Server received your message: ${message}`);
-      // });
-    });
-
-    server.listen(4241, () => {
-      console.log("ws on *:4241");
     });
 
     app.get("/", (req, res) => {
@@ -51,14 +43,14 @@ const start = async ({ pubkyClient }: { pubkyClient: any }) => {
 
     app.post("/new-invoice", async (req, res) => {
       try {
-        const { prompt } = req.body;
+        const { prompt, websocket_id } = req.body;
         if (!prompt) {
           return res.status(400).json({ error: "Prompt is required." });
         }
 
         const invoiceData = await createInvoice({
           amount: 21,
-          websocketId: "1",
+          websocket_id,
           prompt,
         });
 
@@ -164,11 +156,13 @@ const start = async ({ pubkyClient }: { pubkyClient: any }) => {
       } catch (error: any) {
         console.log(error);
         await updateInvoiceStatus(`${invoiceDb}`, "failed");
-        res.status(500).json({ error: error.message });
+
+        res.json({ message: "Webhook processed successfully." });
+        // res.status(500).json({ error: error.message });
       }
     });
 
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
     return app;
@@ -178,11 +172,15 @@ const start = async ({ pubkyClient }: { pubkyClient: any }) => {
 };
 
 const emitEvent = (connectedClients: any, websocket_id: string, event: string, data: any) => {
-  if (connectedClients[websocket_id]) {
-    connectedClients[websocket_id].emit(event, data);
-    console.log(`Message sent to ${websocket_id}: ${data}`);
-  } else {
-    console.log(`Socket ${websocket_id} not found`);
+  try {
+    if (connectedClients[websocket_id]) {
+      connectedClients[websocket_id].emit(event, data);
+      console.log(`Message sent to ${websocket_id}: ${data}`);
+    } else {
+      console.log(`Socket ${websocket_id} not found`);
+    }
+  } catch (error) {
+    console.log(error);
   }
 };
 

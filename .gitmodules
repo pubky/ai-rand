@@ -1,0 +1,3 @@
+[submodule "0_backend/skunk-works"]
+	path = 0_backend/skunk-works
+	url = https://github.com/pubky/skunk-works.git

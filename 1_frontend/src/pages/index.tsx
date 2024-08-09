@@ -19,7 +19,7 @@ export default function Home() {
   const [postUri, setPostUri] = useState<string | null>(null);
 
   useEffect(() => {
-    const socket = io("http://localhost:4241");
+    const socket = io("https://ai-rand-backend.miguelmedeiros.dev");
 
     socket.on("connect", () => {
       if (socket.id) {
@@ -76,10 +76,17 @@ export default function Home() {
     setLoading(true);
 
     // fetch the API to get the invoice
-    const response = await axios.post("http://localhost:4242/new-invoice", {
+    console.log({
       prompt,
       websocket_id: socketId,
     });
+    const response = await axios.post(
+      "https://ai-rand-backend.miguelmedeiros.dev/new-invoice",
+      {
+        prompt,
+        websocket_id: socketId,
+      }
+    );
 
     if (response) {
       setStage(1);

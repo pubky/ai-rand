@@ -4,14 +4,14 @@ type CallAlbyProps = {
   memo: string;
   amount: number;
   metadata: {
-    websocketId: string;
+    websocket_id: string;
     prompt: string;
   };
 };
 
 type CreateInvoiceProps = {
   amount: number;
-  websocketId: string;
+  websocket_id: string;
   prompt: string;
 };
 
@@ -34,13 +34,13 @@ async function callAlby(payload: CallAlbyProps) {
   }
 }
 
-async function createInvoice({ amount = 1000, websocketId = "1", prompt }: CreateInvoiceProps) {
+async function createInvoice({ amount = 1000, websocket_id = "", prompt }: CreateInvoiceProps) {
   const payload = {
     memo: "AI Rand Post",
     amount,
     metadata: {
       prompt,
-      websocketId,
+      websocket_id,
     },
   };
 

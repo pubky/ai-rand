@@ -34,7 +34,7 @@ export const generateImageFromText = async ({ prompt }: { prompt: string }) => {
     });
 
     const data: any = await response.json();
-    console.log(data);
+
     return data;
   } catch (error) {
     console.error("Failed to generate image:", error);

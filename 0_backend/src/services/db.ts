@@ -2,39 +2,44 @@ import sqlite3 from "sqlite3";
 import { open } from "sqlite";
 
 async function openDb() {
-  return open({
-    filename: "./database.db",
-    driver: sqlite3.Database,
-  });
+  try {
+    return open({
+      filename: "./data/database.db",
+      driver: sqlite3.Database,
+    });
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 async function initDb() {
   try {
     const db = await openDb();
-    await db.exec(`
-      CREATE TABLE IF NOT EXISTS invoices (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        websocket_id TEXT,
-        prompt TEXT,
-        invoice TEXT,
-        amount INTEGER,
-        content_image TEXT,
-        content_text TEXT,
-        pubky_uri TEXT,
-        status TEXT CHECK (
-          status IN (
-            'pending',
-            'paid',
-            'generating_image',
-            'refining_text',
-            'publishing_post',
-            'done',
-            'failed')
-          ),
-        created_at TEXT,
-        updated_at TEXT
-      )
-          `);
+    if (!db) return;
+    // await db.exec(`
+    //   CREATE TABLE IF NOT EXISTS invoices (
+    //     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    //     websocket_id TEXT,
+    //     prompt TEXT,
+    //     invoice TEXT,
+    //     amount INTEGER,
+    //     content_image TEXT,
+    //     content_text TEXT,
+    //     pubky_uri TEXT,
+    //     status TEXT CHECK (
+    //       status IN (
+    //         'pending',
+    //         'paid',
+    //         'generating_image',
+    //         'refining_text',
+    //         'publishing_post',
+    //         'done',
+    //         'failed')
+    //       ),
+    //     created_at TEXT,
+    //     updated_at TEXT
+    //   )
+    //       `);
   } catch (error) {
     console.log(error);
   }
@@ -56,6 +61,7 @@ async function createInvoice({
   content_text?: string;
 }) {
   const db = await openDb();
+  if (!db) return;
   const result = await db.run(
     `
     INSERT INTO invoices (
@@ -88,6 +94,7 @@ async function createInvoice({
 
 async function updateInvoiceStatus(id: string, status: string) {
   const db = await openDb();
+  if (!db) return;
   return await db.run(
     `
     UPDATE invoices
@@ -102,6 +109,7 @@ async function updateInvoiceStatus(id: string, status: string) {
 
 async function updateInvoicePubkyUri(id: string, pubky_uri: string) {
   const db = await openDb();
+  if (!db) return;
   return await db.run(
     `
     UPDATE invoices
@@ -116,6 +124,7 @@ async function updateInvoicePubkyUri(id: string, pubky_uri: string) {
 
 async function updateInvoiceAiContent(id: string, content_image: string, content_text: string) {
   const db = await openDb();
+  if (!db) return;
   return await db.run(
     `
     UPDATE invoices
