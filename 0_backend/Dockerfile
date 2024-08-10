@@ -1,10 +1,6 @@
-FROM node:21.6.2-slim as builder
-
-RUN corepack enable
+FROM node:21.6.2-slim
 
 WORKDIR /usr/src/app
-
-ENV NODE_PATH=/usr/src/app/node_modules
 
 COPY . .
 
@@ -17,11 +13,5 @@ RUN cd /skunk-works; \
     npm run link; \
     cd /usr/src/app; \
     npm link @pubky/sdk;
-
-FROM node:21.6.2-slim as final
-
-WORKDIR /usr/src/app
-
-COPY --from=builder /usr/src/app /usr/src/app
 
 CMD [ "npm", "run", "start:dev"]

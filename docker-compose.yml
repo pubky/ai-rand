@@ -11,6 +11,7 @@ services:
     env_file:
       - ./0_backend/.env
     volumes:
+      - ./0_backend/skunk-works:/skunk-works
       - ./0_backend:/usr/src/app
       - ./0_backend/data:/usr/src/app/data
     restart: always
