@@ -35,7 +35,6 @@ const start = async () => {
       relay: PKARR_RELAY,
       homeserverUrl: HOMESERVER,
     });
-    console.log(client);
 
     // wait for client to be ready, it needs to resolve te homeserver url
     await client.ready();

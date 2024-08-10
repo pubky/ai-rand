@@ -42,7 +42,12 @@ export default function Home() {
 
     socket.on("done", (data) => {
       setProgress("Done!");
-      setPostUri(data);
+
+      let url = "https://mvp-001.nuh.dev/post/";
+
+      url += data.replace("pubky:", "").replace("/pubky.app/posts/", "/");
+
+      setPostUri(url);
     });
 
     return () => {
