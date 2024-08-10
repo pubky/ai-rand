@@ -11,7 +11,7 @@ export const openai = createOpenAI({
 export const generatePostText = async ({ prompt, model = "gpt-3.5-turbo" }: { prompt: string; model?: string }): Promise<any> => {
   const { text } = await generateText({
     model: openai(model),
-    prompt: `Write me a tweet about, but you have to be very toxic on your tweet: ${prompt}`,
+    prompt: `Write me a tweet about: ${prompt}`,
   });
 
   return text;
