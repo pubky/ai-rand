@@ -49,7 +49,7 @@ const start = async ({ pubkyClient }: { pubkyClient: any }) => {
         }
 
         const invoiceData = await createInvoice({
-          amount: 21,
+          amount: 500,
           websocket_id,
           prompt,
         });
