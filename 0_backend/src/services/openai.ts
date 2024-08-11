@@ -11,7 +11,14 @@ export const openai = createOpenAI({
 export const generatePostText = async ({ prompt, model = "gpt-3.5-turbo" }: { prompt: string; model?: string }): Promise<any> => {
   const { text } = await generateText({
     model: openai(model),
-    prompt: `Write me a tweet about: ${prompt}`,
+    prompt: `Write a tweet with a storytelling about:
+    ${prompt}
+
+    --
+    Always answer in english.
+    Try to open your sentence with different words than "Once upon a time" or "There was a time when" or "In a world where" or "In a time where" or "In a place where".
+    Be creative!
+    `,
   });
 
   return text;
@@ -26,7 +33,7 @@ export const generateImageFromText = async ({ prompt }: { prompt: string }) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "dall-e-3", // Use the appropriate model name
+        model: "dall-e-3",
         prompt: prompt,
         n: 1,
         size: "1024x1024",

@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Clipboard, ClipboardCheckIcon } from "lucide-react";
 
@@ -19,16 +18,16 @@ export default function CopyToClipboard({
   };
 
   return (
-    <Button
-      className="p-2 px-4 w-[175px] bg-purple-500 text-white rounded-lg text-[16px]"
+    <button
+      className={`p-3 w-[170px] text-white rounded-full transition-all bg-purple-500 hover:bg-[#E640A3] hover:text-[#E7E4E8] hover:shadow-yellow-200 hover:border-[#E640A3]`}
       onClick={() => copyToClipboard()}
     >
       {copied ? (
-        <ClipboardCheckIcon className="mr-2 h-4 w-4" />
+        <ClipboardCheckIcon className="inline mr-2 h-4 w-4" />
       ) : (
-        <Clipboard className="mr-2 h-4 w-4" />
+        <Clipboard className="inline mr-2 h-4 w-4" />
       )}
-      {label}
-    </Button>
+      {copied ? "Copied" : label}
+    </button>
   );
 }

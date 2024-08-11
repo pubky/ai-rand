@@ -67,3 +67,49 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes zapAnimation {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    color: #ffd700; /* Amarelo */
+  }
+  50% {
+    transform: scale(1.2) rotate(10deg);
+    color: #ffa500; /* Laranja */
+  }
+}
+
+@keyframes zapHoverAnimation {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    color: #ff0000; /* Vermelho */
+  }
+  50% {
+    transform: scale(1.4) rotate(-10deg);
+    color: #ffff00; /* Amarelo */
+  }
+  25%,
+  75% {
+    color: #ffa500; /* Laranja */
+  }
+}
+
+.zap-loop {
+  animation: zapAnimation 0.5s infinite;
+}
+
+.zap-hover:hover {
+  animation: zapHoverAnimation 0.3s infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-blink {
+  animation: blink 1.5s step-start infinite;
+}

@@ -1,22 +1,33 @@
-import { Inter } from "next/font/google";
-import { useEffect, useState } from "react";
-import axios from "axios";
-import Image from "next/image";
-import CopyToClipboard from "../../components/copyToClipboard";
+import React, { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
-const inter = Inter({ subsets: ["latin"] });
+import Step0 from "@/components/steps/step0";
+import Step1 from "@/components/steps/step1";
+import Step2 from "@/components/steps/step2";
+import Header from "@/components/common/header";
+import Main from "@/components/common/main";
+import ConfettiExplosion from "@/components/common/confetti";
 
 export default function Home() {
-  const [prompt, setPrompt] = useState<string>("");
+  const [stage, setStage] = useState<number>(0);
+  const [prevStage, setPrevStage] = useState<number>(0);
+  const [direction, setDirection] = useState("right");
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [invoiceBolt11, setInvoiceBolt11] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [stage, setStage] = useState<number>(0);
   const [socketId, setSocketId] = useState<string | null>(null);
-  const [progress, setProgress] = useState<string | null>(null);
   const [postUri, setPostUri] = useState<string | null>(null);
+  const [prompt, setPrompt] = useState<string>("");
+  const [runConfetti, setRunConfetti] = useState(false);
+  const [progressStates, setProgressStates] = useState<number>(0);
+
+  useEffect(() => {
+    if (prevStage > stage) {
+      setDirection("right");
+    } else {
+      setDirection("left");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage]);
 
   useEffect(() => {
     const socket = io("https://ai-rand-backend.miguelmedeiros.dev");
@@ -27,251 +38,123 @@ export default function Home() {
       }
     });
 
-    socket.on("generating_image", (data) => {
+    socket.on("generating_image", () => {
+      setPostUri(null);
+      setQrCode(null);
+      setInvoiceBolt11(null);
+      setPrevStage(1);
       setStage(2);
-      setProgress(data);
+      setProgressStates(0);
     });
 
-    socket.on("refining_text", (data) => {
-      setProgress(data);
+    socket.on("refining_text", () => {
+      setProgressStates(1);
     });
 
-    socket.on("publishing_post", (data) => {
-      setProgress(data);
+    socket.on("creating_tags", () => {
+      setProgressStates(2);
+    });
+
+    socket.on("uploading_image", () => {
+      setProgressStates(3);
+    });
+
+    socket.on("publishing_post", () => {
+      setProgressStates(4);
     });
 
     socket.on("done", (data) => {
-      setProgress("Done!");
+      setProgressStates(5);
 
       let url = "https://mvp-001.nuh.dev/post/";
 
       url += data.replace("pubky:", "").replace("/pubky.app/posts/", "/");
 
       setPostUri(url);
+      setPrompt("");
+      setRunConfetti(true);
+      setTimeout(() => {
+        setRunConfetti(false);
+      }, 15000);
     });
 
     return () => {
       socket.off("connect");
       socket.disconnect();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSubmitStage0 = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    setError(null);
-
-    const prompt = e.currentTarget.querySelector("textarea")?.value;
-
-    if (!prompt) {
-      setError("Please enter a prompt!");
-      return;
-    }
-
-    if (prompt.length < 10) {
-      setError("Please enter a prompt with at least 10 characters!");
-      return;
-    }
-
-    if (prompt.length > 300) {
-      setError("Please enter a prompt with at most 300 characters!");
-      return;
-    }
-
-    setLoading(true);
-
-    // fetch the API to get the invoice
-    console.log({
-      prompt,
-      websocket_id: socketId,
-    });
-    const response = await axios.post(
-      "https://ai-rand-backend.miguelmedeiros.dev/new-invoice",
-      {
-        prompt,
-        websocket_id: socketId,
-      }
-    );
-
-    if (response) {
-      setStage(1);
-      setQrCode(response.data.qr_code_png);
-      setInvoiceBolt11(response.data.payment_request);
-    }
-
-    setLoading(false);
-  };
-
-  const handleSubmitStage1 = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setStage(0);
-  };
-
-  if (stage === 0) {
-    return (
-      <main
-        className={`flex min-h-screen flex-col items-center p-24 ${inter.className} text-center`}
-      >
-        <h1 className="text-6xl font-bold text-purple-400">Ai Rand</h1>
-        <p className="text-[22px] mt-8">
-          Pay with Lightning to create
-          <br />
-          AI-generated content
-          <br />
-          in Pubky Social Network.
-        </p>
-        <div className="flex flex-col items-center justify-center mt-12">
-          <form
-            className="flex flex-col items-center"
-            onSubmit={handleSubmitStage0}
-          >
-            <textarea
-              className={`w-[420px] h-48 p-4 border rounded-lg text-black bg-purple-100 ${
-                error ? "border-red-400 bg-red-100" : "border-gray-300"
-              } resize-none`}
-              placeholder="Write a prompt..."
-              value={prompt}
-              onChange={(e) => setPrompt(e.currentTarget.value)}
-              disabled={loading}
-            ></textarea>
-            <div
-              className={`${
-                prompt.length === 0
-                  ? "text-purple-100"
-                  : prompt.length < 10 || prompt.length > 300
-                  ? "text-red-400"
-                  : "text-purple-400"
-              } text-xs block -mt-[22px]
-              ml-[365px]
-              `}
-            >
-              {prompt.length}/300
-            </div>
-            <div className="flex flex-row gap-4 items-center mt-6">
-              <button
-                type="reset"
-                className="p-2 px-4 w-[175px] bg-gray-800 text-white rounded-lg"
-                onClick={() => {
-                  setPrompt("");
-                  setError(null);
-                }}
-                disabled={loading}
-              >
-                Clear Prompt
-              </button>
-              <button
-                className="p-2 px-4 w-[175px] bg-purple-500 text-white rounded-lg"
-                type="submit"
-                disabled={loading}
-              >
-                Generate Content
-              </button>
-            </div>
-            <div className="text-red-400 mt-4 transition-all">{error}</div>
-          </form>
-        </div>
-      </main>
-    );
-  }
-
-  if (stage === 1) {
-    return (
-      <main
-        className={`flex min-h-screen flex-col items-center p-24 ${inter.className} text-center`}
-      >
-        <h1 className="text-6xl font-bold text-purple-400">Ai Rand</h1>
-        <p className="text-[22px] mt-8">
-          As soon as you pay,
-          <br />
-          it will start generating content.
-        </p>
-        <div className="flex flex-col items-center justify-center mt-12">
-          <div className="flex flex-col items-center">
-            <div className="flex flex-col items-center">
-              {qrCode && (
-                <Image
-                  alt="qrcode"
-                  src={qrCode}
-                  width="300"
-                  height="300"
-                  className="rounded-[10px]"
-                />
-              )}
-              <p className="text-xs mt-4">Scan the QR Code to pay</p>
-            </div>
-            <div className="flex flex-col gap-4 items-center mt-6">
-              {invoiceBolt11 && <CopyToClipboard value={invoiceBolt11} />}
-              <button
-                type="submit"
-                className="p-2 px-4 w-[175px] bg-gray-800 text-white rounded-lg"
-                onClick={() => {
-                  setStage(0);
-                  setPrompt("");
-                  setError(null);
-                }}
-                disabled={loading}
-              >
-                Back
-              </button>
-            </div>
-            <div className="text-red-400 mt-4 transition-all">{error}</div>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  if (stage === 2) {
-    return (
-      <main
-        className={`flex min-h-screen flex-col items-center p-24 ${inter.className} text-center`}
-      >
-        <h1 className="text-6xl font-bold text-purple-400">Ai Rand</h1>
-        {postUri ? (
-          <p className="text-[22px] mt-8">Content created!</p>
-        ) : (
-          <p className="text-[22px] mt-8">Generating content...</p>
-        )}
-
-        <div className="flex flex-col items-center justify-center mt-12">
-          <div className="flex flex-col items-center">
-            <div className="flex flex-col items-center">
-              {!postUri && <p className="text-xs mt-4">{progress}</p>}
-              <div className="flex flex-row gap-4 items-center mt-6">
-                {postUri && (
-                  <CopyToClipboard label="Copy post URI" value={postUri} />
-                )}
-                {postUri && (
-                  <a
-                    href={postUri}
-                    target="_blank"
-                    className="p-2 px-4 w-[175px] bg-purple-800 text-white rounded-lg"
-                  >
-                    View Post
-                  </a>
-                )}
-              </div>
-              <div className="mt-12">
-                <button
-                  type="submit"
-                  className="p-2 px-4 w-[175px] bg-gray-800 text-white rounded-lg"
-                  onClick={() => {
-                    setStage(0);
-                    setPrompt("");
-                    setError(null);
-                  }}
-                  disabled={loading}
-                >
-                  Back
-                </button>
-              </div>
-              <div className="text-red-400 mt-4 transition-all">{error}</div>
-            </div>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  return <></>;
+  return (
+    <>
+      {runConfetti && <ConfettiExplosion />}
+      <Main>
+        <Header />
+        <StepWrapper currentStage={0} stage={stage} direction={direction}>
+          <Step0
+            prompt={prompt}
+            setPrompt={setPrompt}
+            setInvoiceBolt11={setInvoiceBolt11}
+            setQrCode={setQrCode}
+            setStage={setStage}
+            setPrevStage={setPrevStage}
+            socketId={socketId}
+          />
+        </StepWrapper>
+        <StepWrapper currentStage={1} stage={stage} direction={direction}>
+          <Step1
+            setStage={setStage}
+            setPrevStage={setPrevStage}
+            qrCode={qrCode}
+            invoiceBolt11={invoiceBolt11}
+          />
+        </StepWrapper>
+        <StepWrapper currentStage={2} stage={stage} direction={direction}>
+          <Step2
+            postUri={postUri}
+            setStage={setStage}
+            setPrevStage={setPrevStage}
+            progressStates={progressStates}
+          />
+        </StepWrapper>
+      </Main>
+    </>
+  );
 }
+
+// esumo das Cores:
+// Erro:
+
+// Fundo: #E640A3
+// Texto: #FFD700
+// Borda: #5A2D83
+// Acerto:
+
+// Fundo: #A059CF
+// Texto: #E7E4E8
+
+const StepWrapper = ({
+  stage,
+  currentStage,
+  direction,
+  children,
+}: {
+  stage: number;
+  currentStage: number;
+  direction: string;
+  children: React.ReactNode;
+}) => {
+  return (
+    <div
+      className={`transition-all overflow-hidden duration-500 ease-in-out transform ${
+        stage === currentStage
+          ? "translate-x-0 opacity-100 h-auto"
+          : direction === "right"
+          ? "-translate-x-full opacity-0 h-0"
+          : "translate-x-full opacity-0 h-0"
+      }`}
+    >
+      {children}
+    </div>
+  );
+};

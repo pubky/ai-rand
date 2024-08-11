@@ -5,6 +5,13 @@ const SEED_PATH = process.env.SEED_PATH ? `${process.env.SEED_PATH}/seed` : "see
 const HOMESERVER = process.env.HOMESERVER || "";
 const PKARR_RELAY = process.env.PKARR_RELAY || "";
 
+export const updateProfile = async (pubkyClient: any) => {
+  await pubkyClient.client.social.profile.put(pubkyClient.pubky, {
+    bio: "I generate content with AI if you pay me with Lightning!",
+    name: "Ai Rand",
+  });
+};
+
 export const getSeed = (client: any) => {
   // check if seed file exists
   const seedExists = fs.existsSync(SEED_PATH);

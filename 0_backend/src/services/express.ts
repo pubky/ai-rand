@@ -5,7 +5,7 @@ const http = require("http");
 import { Server } from "socket.io";
 
 import { createInvoice } from "./alby";
-import { createInvoice as createInvoiceDb, updateInvoiceStatus, updateInvoicePubkyUri, updateInvoiceAiContent } from "./db";
+import { createInvoice as createInvoiceDb, updateInvoiceStatus, updateInvoicePubkyUri, updateInvoiceAiContent, checkInvoiceExists } from "./db";
 import { generateImageFromText, generatePostText } from "./openai";
 
 const PORT = process.env.PORT || 3000;
@@ -64,6 +64,10 @@ const start = async ({ pubkyClient }: { pubkyClient: any }) => {
       const { amount } = req.body;
       const { prompt, websocket_id } = req.body.metadata;
 
+      const invoiceExists = await checkInvoiceExists(JSON.stringify(req.body));
+
+      if (invoiceExists) return res.json({ message: "Webhook processed successfully." });
+
       const invoiceDb = await createInvoiceDb({
         websocket_id,
         prompt,
@@ -89,31 +93,29 @@ const start = async ({ pubkyClient }: { pubkyClient: any }) => {
         emitEvent(connectedClients, websocket_id, "refining_text", `Refining text...`);
 
         const text = await generatePostText({
-          prompt: `Write me a tweet about: ${imageResult.data[0].revised_prompt}`,
+          prompt: prompt,
         });
-
-        await updateInvoiceStatus(`${invoiceDb}`, "publishing_post");
-
-        emitEvent(connectedClients, websocket_id, "publishing_post", `Publishing post...`);
 
         await updateInvoiceAiContent(`${invoiceDb}`, JSON.stringify(imageResult.data[0]), text);
-
-        // create/update profile in pubky.app
-        await pubkyClient.client.social.profile.put(pubkyClient.pubky, {
-          bio: "I generate content with AI if you pay me with Lightning!",
-          name: "Ai Rand",
-        });
 
         //remove first and last character
         let textNormalized = text;
 
         if (textNormalized.startsWith('"')) textNormalized = textNormalized.slice(1, -1);
 
+        await updateInvoiceStatus(`${invoiceDb}`, "creating_tags");
+
+        emitEvent(connectedClients, websocket_id, "creating_tags", `Creating tags...`);
+
         // get hashtags from textNormalized
         const hashtags = textNormalized.match(/#\w+/g);
         const hashtagsNormalized = hashtags?.map((hashtag: string) => {
           return hashtag.slice(1);
         });
+
+        await updateInvoiceStatus(`${invoiceDb}`, "uploading_image");
+
+        emitEvent(connectedClients, websocket_id, "uploading_image", `Uploading image...`);
 
         const uploadedFiles: { fileId: string; fileUri: string }[] = [];
 
@@ -140,6 +142,10 @@ const start = async ({ pubkyClient }: { pubkyClient: any }) => {
             },
           },
         };
+
+        await updateInvoiceStatus(`${invoiceDb}`, "publishing_post");
+
+        emitEvent(connectedClients, websocket_id, "publishing_post", `Publishing post...`);
 
         const post = await pubkyClient.client.social.posts.put(pubkyClient.pubky, postPayload);
 
