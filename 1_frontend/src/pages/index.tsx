@@ -122,9 +122,6 @@ export default function Home() {
   );
 }
 
-// esumo das Cores:
-// Erro:
-
 // Fundo: #E640A3
 // Texto: #FFD700
 // Borda: #5A2D83

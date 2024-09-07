@@ -23,9 +23,7 @@ export default function Step1({
       const webln = await requestProvider();
       webln.enable();
       webln.sendPayment(invoiceBolt11);
-      // Now you can call all of the webln.* methods
     } catch (err) {
-      // Tell the user what went wrong
       console.log(err);
     }
   };
